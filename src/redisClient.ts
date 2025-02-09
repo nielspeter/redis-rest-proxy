@@ -53,7 +53,9 @@ export function getRedis(): Redis {
       });
     } else {
       // Single-instance mode.
-      console.info(`Creating Redis client in single-instance mode with host: ${config.REDIS_HOST}, port: ${config.REDIS_PORT}`);
+      console.info(
+        `Creating Redis client in single-instance mode with host: ${config.REDIS_HOST}, port: ${config.REDIS_PORT}`
+      );
       const db = parseInt(config.REDIS_DB || '0', 10);
       redis = new Redis({
         host: config.REDIS_HOST || 'localhost',

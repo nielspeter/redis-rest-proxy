@@ -1,5 +1,5 @@
 /**
- * Redis REST API Proxy
+ * Redis REST Proxy
  *
  * This service uses Bun to serve HTTP requests and ioredis to connect to Redis.
  * It supports three command endpoints:
@@ -11,13 +11,15 @@
  *  - SERVER_PORT: Port for the proxy (default: 3000)
  *  - AUTH_TOKEN: Token required to authenticate requests.
  *  - For single‑instance mode:
- *      - REDIS_URL: Redis connection URL (default: redis://localhost:6379)
+ *      - REDIS_HOST: Redis host (default: localhost)
+ *      - REDIS_PORT: Redis port (default: 6379)
+ *      - REDIS_DB: Redis database index (default: 0)
+ *      - REDIS_PASSWORD: Password for the Redis instance.
  *  - For Sentinel mode:
  *      - REDIS_SENTINELS: Comma‑separated list of host:port (e.g., "host1:26379,host2:26379")
- *      - REDIS_MASTER_NAME: Name of the master (defaults to "mymaster")
+ *      - REDIS_MASTER_NAME: Name of the master (default: "mymaster")
  *      - REDIS_MASTER_PASSWORD: Password for the master.
  *      - REDIS_SENTINEL_PASSWORD: Password for the sentinels (if needed)
- *      - REDIS_DB: Database index to use (default: 0)
  *  - REDIS_ENABLE_AUTO_PIPELINING: Set to "true" to enable auto‑pipelining.
  */
 
