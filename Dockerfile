@@ -1,5 +1,5 @@
 # Use the official Bun image as the base image
-FROM oven/bun:latest
+FROM oven/bun:1.2.2-alpine
 
 # Set the working directory
 WORKDIR /app
@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package.json and bun.lockb
 COPY package.json bun.lock ./
 
-# Install dependencies
-RUN bun install
+# Install only production dependencies
+RUN bun install --production
 
 # Copy the rest of the application code
 COPY . .
