@@ -1,0 +1,18 @@
+services:
+  proxy:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      AUTH_TOKEN: MY_SUPER_SECRET_TOKEN
+      REDIS_HOST: redis
+    volumes:
+      - .:/app
+    command: ['bun', 'run', 'start']
+
+  redis:
+    image: redis/redis-stack:7.2.0-v14
+    container_name: redis
+    ports:
+      - '6379:6379'
+      - '8001:8001'

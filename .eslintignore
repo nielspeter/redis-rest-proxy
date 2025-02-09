@@ -1,0 +1,5 @@
+.github
+.idea
+.vscode
+bun.lock
+node_modules

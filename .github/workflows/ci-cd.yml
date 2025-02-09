@@ -1,0 +1,70 @@
+name: Test and Build Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          # Optionally, you can pin a specific version. For example:
+          # bun-version: 'latest'
+          # bun-version: 'canary'
+          # Leave blank to use the default behavior.
+          bun-version: 'latest'
+          # If you prefer to specify a version file, you can uncomment and set:
+          # bun-version-file: '.bun-version'
+          # Additional optional inputs:
+          # bun-download-url: <custom download URL if needed>
+          # registry-url: <registry URL if needed>
+          # scope: <scope for registry authentication>
+          # no-cache: true  # set to true to disable caching of the Bun executable
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Build project
+        run: bun run build
+
+      - name: Extract version
+        id: extract_version
+        run: echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/redis-rest:${{ env.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/redis-rest:latest
