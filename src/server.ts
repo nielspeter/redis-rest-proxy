@@ -342,7 +342,7 @@ export async function handler(request: Request): Promise<Response> {
 
 getRedis(); // Initialize the Redis client.
 
-console.log(`Redis REST API proxy listening on port ${SERVER_PORT}`);
+console.log(`Redis REST proxy listening on port ${SERVER_PORT}`);
 const server = serve({
   port: SERVER_PORT,
   fetch: handler,
