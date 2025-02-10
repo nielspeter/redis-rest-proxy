@@ -34,18 +34,15 @@ const CONSTANTS = {
   DEFAULT_TOKEN: 'MY_SUPER_SECRET_TOKEN',
   HEADERS: {
     UPSTASH_ENCODING: 'Upstash-Encoding',
-    UPSTASH_RESPONSE_FORMAT: 'Upstash-Response-Format',
   },
 } as const;
 
 // --- Environment Configuration ---
-const SERVER_PORT = parseInt(Bun.env.SERVER_PORT || String(CONSTANTS.DEFAULT_PORT), 10);
-const AUTH_TOKEN = Bun.env.AUTH_TOKEN || CONSTANTS.DEFAULT_TOKEN;
-z.object({
-  SERVER_PORT: z.number().min(1).max(65535),
-  AUTH_TOKEN: z.string().min(1),
-  REDIS_URL: z.string().url().optional(),
+const envSchema = z.object({
+  SERVER_PORT: z.preprocess((val) => parseInt(String(val || CONSTANTS.DEFAULT_PORT), 10), z.number().min(1).max(65535)),
+  AUTH_TOKEN: z.string().min(1).default(CONSTANTS.DEFAULT_TOKEN),
 });
+const env = envSchema.parse(Bun.env);
 
 // --- Helper Functions ---
 
@@ -64,7 +61,7 @@ export async function checkAuth(request: Request): Promise<boolean> {
   if (!token && url.searchParams.has('_token')) {
     token = url.searchParams.get('_token') as string;
   }
-  return token === AUTH_TOKEN;
+  return token === env.AUTH_TOKEN;
 }
 
 /**
@@ -87,43 +84,6 @@ export function encodeToBase64(value: any): any {
   return value;
 }
 
-/**
- * Formats a Redis reply in the RESP2 protocol.
- */
-export function formatResp2(reply: any): string {
-  if (reply === null || reply === undefined) {
-    return `$-1\r\n`;
-  }
-  if (reply instanceof Buffer) {
-    return `$${reply.length}\r\n${reply.toString('binary')}\r\n`;
-  }
-  if (reply instanceof Error) {
-    return `-ERR ${reply.message}\r\n`;
-  }
-  if (typeof reply === 'boolean') {
-    return `:${reply ? 1 : 0}\r\n`;
-  }
-  if (typeof reply === 'number') {
-    return `:${reply}\r\n`;
-  }
-  if (typeof reply === 'string') {
-    if (reply === 'OK') {
-      return `+OK\r\n`;
-    }
-    const byteLength = Buffer.byteLength(reply, 'utf8');
-    return `$${byteLength}\r\n${reply}\r\n`;
-  }
-  if (Array.isArray(reply)) {
-    let out = `*${reply.length}\r\n`;
-    for (const element of reply) {
-      out += formatResp2(element);
-    }
-    return out;
-  }
-  const str = String(reply);
-  return `$${Buffer.byteLength(str, 'utf8')}\r\n${str}\r\n`;
-}
-
 // Add type definitions for Redis responses
 type RedisResponse = string | number | boolean | null | Buffer | RedisResponse[];
 
@@ -132,7 +92,6 @@ type RedisResponse = string | number | boolean | null | Buffer | RedisResponse[]
  */
 export function formatRedisResponse(reply: any, request: Request): RedisResponse {
   const upstashEncoding = request.headers.get(CONSTANTS.HEADERS.UPSTASH_ENCODING)?.toLowerCase();
-  const respFormat = request.headers.get(CONSTANTS.HEADERS.UPSTASH_RESPONSE_FORMAT)?.toLowerCase();
 
   // Convert object responses (e.g., from HGETALL) to arrays.
   if (typeof reply === 'object' && reply !== null && !Array.isArray(reply)) {
@@ -142,12 +101,6 @@ export function formatRedisResponse(reply: any, request: Request): RedisResponse
   const encodeBase64 = upstashEncoding === 'base64';
   reply = encodeBase64 ? encodeToBase64(reply) : reply;
 
-  if (respFormat === 'resp2') {
-    if (encodeBase64) {
-      return 'Upstash-Encoding cannot be used with RESP2 format.';
-    }
-    return formatResp2(reply);
-  }
   return reply;
 }
 
@@ -342,9 +295,9 @@ export async function handler(request: Request): Promise<Response> {
 
 getRedis(); // Initialize the Redis client.
 
-console.log(`Redis REST proxy listening on port ${SERVER_PORT}`);
+console.log(`Redis REST proxy listening on port ${env.SERVER_PORT}`);
 const server = serve({
-  port: SERVER_PORT,
+  port: env.SERVER_PORT,
   fetch: handler,
   idleTimeout: 0, // Disable timeout (useful for long-lived connections)
 });
