@@ -2,7 +2,6 @@ import { test, expect } from 'bun:test';
 import {
   checkAuth,
   encodeToBase64,
-  formatResp2,
   formatRedisResponse,
   jsonResponse,
   buildCommand,
@@ -95,46 +94,6 @@ test('encodeToBase64 encodes an object', () => {
   });
 });
 
-// --- Tests for formatResp2 ---
-test('formatResp2 returns null bulk for null', () => {
-  const output = formatResp2(null);
-  expect(output).toBe('$-1\r\n');
-});
-
-test('formatResp2 formats a Buffer', () => {
-  const buf = Buffer.from('Hello', 'utf8');
-  const output = formatResp2(buf);
-  expect(output).toBe(`$${buf.length}\r\nHello\r\n`);
-});
-
-test('formatResp2 formats an Error', () => {
-  const err = new Error('Test error');
-  const output = formatResp2(err);
-  expect(output).toBe(`-ERR Test error\r\n`);
-});
-
-test('formatResp2 formats booleans', () => {
-  expect(formatResp2(true)).toBe(':1\r\n');
-  expect(formatResp2(false)).toBe(':0\r\n');
-});
-
-test('formatResp2 formats numbers', () => {
-  expect(formatResp2(123)).toBe(':123\r\n');
-});
-
-test('formatResp2 formats OK string', () => {
-  expect(formatResp2('OK')).toBe('+OK\r\n');
-});
-
-test('formatResp2 formats regular strings', () => {
-  expect(formatResp2('Hello')).toBe('$5\r\nHello\r\n');
-});
-
-test('formatResp2 formats arrays recursively', () => {
-  const output = formatResp2(['Hello', 'World']);
-  expect(output).toBe('*2\r\n$5\r\nHello\r\n$5\r\nWorld\r\n');
-});
-
 // --- Tests for formatRedisResponse ---
 test('formatRedisResponse returns base64 when header set', () => {
   const req = new Request('http://localhost/', {
@@ -142,14 +101,6 @@ test('formatRedisResponse returns base64 when header set', () => {
   });
   const output = formatRedisResponse('Hello', req);
   expect(output).toBe(Buffer.from('Hello', 'utf8').toString('base64'));
-});
-
-test('formatRedisResponse returns RESP2 format when header set', () => {
-  const req = new Request('http://localhost/', {
-    headers: { 'Upstash-Response-Format': 'resp2' },
-  });
-  const output = formatRedisResponse('Hello', req);
-  expect(output).toBe('$5\r\nHello\r\n');
 });
 
 // --- Tests for jsonResponse ---
