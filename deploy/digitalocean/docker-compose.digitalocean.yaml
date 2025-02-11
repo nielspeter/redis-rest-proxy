@@ -1,0 +1,47 @@
+services:
+  proxy:
+    image: ghcr.io/nielspeter/redis-rest-proxy:latest
+    container_name: proxy
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proxy.rule=Host(`<YOUR_DOMAIN>`)"
+      - "traefik.http.routers.proxy.entrypoints=websecure"
+      - "traefik.http.routers.proxy.tls.certresolver=letsencrypt"
+      - "traefik.http.services.proxy.loadbalancer.server.port=3000"
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      AUTH_TOKEN: <YOUR_SUPER_SECRET_TOKEN>
+    command: ['bun', 'run', 'start']
+
+  redis:
+    image: redis/redis-stack-server:7.2.0-v14
+    container_name: redis
+    restart: always
+    volumes:
+      - /mnt/redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"  # Bind Redis to localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.redis.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.redis.entrypoints=redis"
+      - "traefik.tcp.services.redis.loadbalancer.server.port=6379"
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"        # Redirects HTTP to HTTPS
+      - "443:443"      # Handles HTTPS traffic
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik.yml:/etc/traefik/traefik.yml:ro"
+      - "./letsencrypt:/letsencrypt"
+    environment:
+      - CF_API_EMAIL=<YOUR_CLOUDFLARE_EMAIL>
+      - CF_API_KEY=<YOUR_CLOUDFLARE_API_KEY>
+    labels:
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
