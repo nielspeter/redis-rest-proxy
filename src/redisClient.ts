@@ -1,4 +1,6 @@
 import Redis from 'ioredis';
+import fs from 'fs';
+import path from 'path';
 import { z } from 'zod';
 
 // Add Zod schemas for configuration validation
@@ -8,6 +10,7 @@ const RedisConfigSchema = z.object({
   REDIS_PORT: z.string().optional().default('6379'),
   REDIS_DB: z.string().optional().default('0'),
   REDIS_PASSWORD: z.string().optional(),
+  REDIS_PASSWORD_FILE: z.string().optional(),
 
   // Sentinel mode
   REDIS_SENTINELS: z.string().optional(),
@@ -30,6 +33,16 @@ export function getRedis(): Redis {
   if (!redis) {
     // Validate configuration
     const config = RedisConfigSchema.parse(Bun.env);
+
+    // Read password from file if REDIS_PASSWORD_FILE is set
+    if (!config.REDIS_PASSWORD && config.REDIS_PASSWORD_FILE) {
+      try {
+        const passwordFilePath = path.resolve(config.REDIS_PASSWORD_FILE);
+        config.REDIS_PASSWORD = fs.readFileSync(passwordFilePath, 'utf8').trim();
+      } catch (error) {
+        throw new Error(`Failed to read Redis password from file: ${error instanceof Error ? error.message : error}`);
+      }
+    }
 
     // Check if Sentinel mode is enabled.
     if (config.REDIS_SENTINELS) {
