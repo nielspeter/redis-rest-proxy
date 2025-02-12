@@ -35,7 +35,7 @@ This proxy is tested with the [Upstash Redis JavaScript Client](https://github.c
 ```bash
 docker pull ghcr.io/nielspeter/redis-rest-proxy:latest
 docker run -p 3000:3000 \
-  -e AUTH_TOKEN="your-secret" \
+  -e AUTH_TOKEN="YOUR_AUTH_TOKEN" \
   -e REDIS_HOST="your.redis.host" \
   ghcr.io/nielspeter/redis-rest-proxy
 ```
