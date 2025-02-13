@@ -55,7 +55,7 @@ This proxy is tested with the [Upstash Redis JavaScript Client](https://github.c
 ```bash
 docker pull ghcr.io/nielspeter/redis-rest-proxy:latest
 docker run -p 3000:3000 \
-  -e AUTH_TOKEN="YOUR_AUTH_TOKEN" \
+  -e AUTH_TOKEN="MY_SUPER_SECRET_TOKEN" \
   -e REDIS_HOST="your.redis.host" \
   ghcr.io/nielspeter/redis-rest-proxy
 ```
@@ -77,8 +77,8 @@ bun run start
 import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
-  url: 'http://your-proxy:3000',
-  token: 'YOUR_AUTH_TOKEN',
+  url: 'http://localhost:3000',
+  token: 'MY_SUPER_SECRET_TOKEN',
 });
 
 // Works like Upstash Redis!
@@ -147,7 +147,7 @@ curl -X POST \
   -H "Authorization: Bearer MY_SUPER_SECRET_TOKEN" \
   -H "Content-Type: application/json" \
   -d '["set", "mykey", "hello"]' \
-  http://localhost:3000/set
+  http://localhost:3000
 ```
 
 Expected Response:
@@ -196,11 +196,11 @@ Expected Response:
 
 ### 6. Base64 Encoded Responses
 
-Request Base64 encoding by adding the Upstash-Encoding: base64 header. For example, to get a key’s value in Base64:
+Request Base64 encoding by adding the Encoding: base64 header. For example, to get a key’s value in Base64:
 
 ```bash
 curl -H "Authorization: Bearer MY_SUPER_SECRET_TOKEN" \
-  -H "Upstash-Encoding: base64" \
+  -H "Encoding: base64" \
   http://localhost:3000/get/mykey
 ```
 
