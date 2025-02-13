@@ -17,14 +17,15 @@ Redis REST Proxy exposes Redis functionality via a RESTful HTTP API. Ideal for c
 This proxy is tested with the [Upstash Redis JavaScript Client](https://github.com/upstash/redis-js/tree/main) and aims to maintain basic compatibility with Upstash Redis services.
 
 **Supported**
+
 - Pipeline & multi-exec transactions
 - Base64 encoding/decoding
 - Basic Redis commands
 - Authentication via bearer token
 
 **Not Supported**
-- Upstash-specific extensions
 
+- Upstash-specific extensions
 
 ---
 
