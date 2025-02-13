@@ -34,6 +34,7 @@ const CONSTANTS = {
   DEFAULT_TOKEN: 'MY_SUPER_SECRET_TOKEN',
   HEADERS: {
     UPSTASH_ENCODING: 'Upstash-Encoding',
+    ENCODING: 'Encoding',
   },
 } as const;
 
@@ -84,21 +85,30 @@ export function encodeToBase64(value: any): any {
   return value;
 }
 
-// Add type definitions for Redis responses
+/**
+ * Type definitions for Redis responses
+ */
 type RedisResponse = string | number | boolean | null | Buffer | RedisResponse[];
 
 /**
  * Formats the Redis response.
  */
 export function formatRedisResponse(reply: any, request: Request): RedisResponse {
-  const upstashEncoding = request.headers.get(CONSTANTS.HEADERS.UPSTASH_ENCODING)?.toLowerCase();
+  const encoding =
+    request.headers.get(CONSTANTS.HEADERS.UPSTASH_ENCODING)?.toLowerCase() ||
+    request.headers.get(CONSTANTS.HEADERS.ENCODING)?.toLowerCase();
+
+  // Validate UPSTASH_ENCODING or ENCODING header values
+  if (encoding === 'resp2') {
+    throw new Error('Invalid request, RESP2 encoding is not supported');
+  }
 
   // Convert object responses (e.g., from HGETALL) to arrays.
   if (typeof reply === 'object' && reply !== null && !Array.isArray(reply)) {
     reply = Object.entries(reply).flat();
   }
 
-  const encodeBase64 = upstashEncoding === 'base64';
+  const encodeBase64 = encoding === 'base64';
   reply = encodeBase64 ? encodeToBase64(reply) : reply;
 
   return reply;

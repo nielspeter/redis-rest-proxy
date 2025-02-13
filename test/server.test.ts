@@ -70,6 +70,37 @@ test('checkAuth fails with invalid token', async () => {
   expect(result).toBe(false);
 });
 
+// --- Tests for formatRedisResponse with ENCODING and UPSTASH_ENCODING headers ---
+test('formatRedisResponse returns base64 when UPSTASH_ENCODING header is set to base64', () => {
+  const req = new Request('http://localhost/', {
+    headers: { 'Upstash-Encoding': 'base64' },
+  });
+  const output = formatRedisResponse('Hello', req);
+  expect(output).toBe(Buffer.from('Hello', 'utf8').toString('base64'));
+});
+
+test('formatRedisResponse returns base64 when ENCODING header is set to base64', () => {
+  const req = new Request('http://localhost/', {
+    headers: { Encoding: 'base64' },
+  });
+  const output = formatRedisResponse('Hello', req);
+  expect(output).toBe(Buffer.from('Hello', 'utf8').toString('base64'));
+});
+
+test('formatRedisResponse throws error when UPSTASH_ENCODING header is set to resp2', () => {
+  const req = new Request('http://localhost/', {
+    headers: { 'Upstash-Encoding': 'resp2' },
+  });
+  expect(() => formatRedisResponse('Hello', req)).toThrow('Invalid request, RESP2 encoding is not supported');
+});
+
+test('formatRedisResponse throws error when ENCODING header is set to resp2', () => {
+  const req = new Request('http://localhost/', {
+    headers: { Encoding: 'resp2' },
+  });
+  expect(() => formatRedisResponse('Hello', req)).toThrow('Invalid request, RESP2 encoding is not supported');
+});
+
 // --- Tests for encodeToBase64 ---
 test('encodeToBase64 encodes a string', () => {
   const input = 'Hello';
