@@ -99,7 +99,7 @@ const result = await redis.get('key');
 
 Additionally, URL query parameters (except `_token`) are appended as extra command arguments.
 
-**Response Encoding:** If the header `Upstash-Encoding` or `Encoding` is set to `base64`, string responses (except `"OK"`) will be encoded in Base64. The encoding is applied recursively to arrays and objects.
+**Response Encoding:** If the header `Encoding` or `Encoding` is set to `base64`, string responses (except `"OK"`) will be encoded in Base64. The encoding is applied recursively to arrays and objects.
 
 ## Example Usage with cURL
 
